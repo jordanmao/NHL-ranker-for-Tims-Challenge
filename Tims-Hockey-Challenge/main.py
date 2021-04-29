@@ -8,10 +8,11 @@ class Player(object):
         self.goals = 0
         self.points = 0
         self.shots = 0
-        self.shot_percentage = 0
-        self.plus_minus = 0
-        self.ice_time_per_game = 0
         self.games = 0
+        self.plus_minus = 0
+        self.shot_percentage = 0
+        self.ice_time_per_game = 0
+        self.goals_per_game = 0
         self.obtainPlayerStats()
 
     def obtainPlayerStats(self):
@@ -27,6 +28,7 @@ class Player(object):
             self.plus_minus = player_stats['plusMinus']
             self.ice_time_per_game = player_stats['timeOnIcePerGame']
             self.games = player_stats['games']
+            self.goals_per_game = round(1.0 * self.goals/self.games, 2)
 
     def printPlayerStats(self):
         print('player ID:', self.player_id)
@@ -37,7 +39,7 @@ class Player(object):
         print('shot %:', self.shot_percentage)
         print('+/-:', self.plus_minus)
         print('ice time per game:', self.ice_time_per_game)
-        print('games:', self.games)
+        print('games played:', self.games)
 
 
 class Team(object):
@@ -53,8 +55,14 @@ class Team(object):
                                     str(self.team_id) + '?expand=team.roster').json()
         for player_data in roster_data['teams'][0]['roster']['roster']:
             if player_data['position']['type'] != 'Goalie':
-                person = player_data['person']
-                self.roster.append(Player(person['id'], person['fullName']))
+                player = Player(player_data['person']['id'],
+                                player_data['person']['fullName'])
+                player_link = 'https://statsapi.web.nhl.com/api/v1/people/' + \
+                              str(player.player_id) + \
+                              '/stats?stats=statsSingleSeason&season=20202021'
+                player_stats = requests.get(player_link).json()
+                if player.goals_per_game > 0.20:
+                    self.roster.append(player)
 
     def printTeamRoster(self):
         for player in self.roster:
@@ -99,8 +107,10 @@ class PlayerList(object):
         sorted_player_list.sort(key=lambda player: player.goals, reverse=True)
         for rank in range(len(self.player_list)):
             player = self.player_list[rank]
-            print('Rank', rank+1, ' Goals:', player.goals,
-                  ' Name:', player.player_name, '(' + str(player.player_id) + ')')
+            print('Rank', rank+1,
+                  ' Goals:', player.goals,
+                  ' Name:', player.player_name,
+                  '(' + str(player.player_id) + ')')
         return sorted_player_list
 
     def sortByPoints(self):
@@ -108,8 +118,24 @@ class PlayerList(object):
         sorted_player_list.sort(key=lambda player: player.points, reverse=True)
         for rank in range(len(self.player_list)):
             player = self.player_list[rank]
-            print('Rank', rank + 1, ' Goals:', player.points,
-                  ' Name:', player.player_name, '(' + str(player.player_id) + ')')
+            print('Rank', rank + 1,
+                  ' Points:', player.points,
+                  ' Name:', player.player_name,
+                  '(' + str(player.player_id) + ')')
+        return sorted_player_list
+
+    def sortByGoalsPerGame(self):
+        sorted_player_list = self.player_list
+        sorted_player_list.sort(key=lambda player: player.goals_per_game, reverse=True)
+        for rank in range(len(self.player_list)):
+            player = self.player_list[rank]
+            output_goals_per_game = str(player.goals_per_game)
+            if len(output_goals_per_game) == 3: # if the G/P only has tenths place,
+                output_goals_per_game += '0'      # add a trailing 0
+            print('Rank', rank + 1,
+                  ' Goals/Game:', output_goals_per_game,
+                  ' Name:', player.player_name,
+                  '(' + str(player.player_id) + ')')
         return sorted_player_list
 
 
@@ -120,6 +146,20 @@ def writeJSONToFile(json_obj, file_name):
 
 
 teams = TeamsPlaying()
-
 players = PlayerList(teams)
-rankedByGoals = players.sortByGoals()
+
+while True:
+    keyboard_input = input('Sort by [goals] [points] [goalspergame]: ')
+    if keyboard_input == 'q':
+        print('Quit')
+        break
+    ranked = players
+    if keyboard_input == 'goals':
+        ranked = players.sortByGoals()
+        print('\n')
+    elif keyboard_input == 'points':
+        ranked = players.sortByPoints()
+        print('\n')
+    elif keyboard_input == 'goalspergame':
+        ranked = players.sortByGoalsPerGame()
+        print('\n')
