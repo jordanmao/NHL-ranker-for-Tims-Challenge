@@ -63,6 +63,7 @@ class Team(object):
                 player_stats = requests.get(player_link).json()
                 if player.goals_per_game > 0.20:
                     self.roster.append(player)
+        print('Obtained', self.team_name, 'roster')
 
     def printTeamRoster(self):
         for player in self.roster:
@@ -83,6 +84,7 @@ class TeamsPlaying(object):
             away_team = Team(away_team_data['id'], away_team_data['name'])
             self.teams_list.append(home_team)
             self.teams_list.append(away_team)
+        print('Obtained list of teams playing today')
 
     def printTeamsPlaying(self):
         for self.team in self.teams_list:
@@ -97,6 +99,7 @@ class PlayerList(object):
     def obtainPlayerList(self, teams):
         for team in teams.teams_list:
             self.player_list += team.roster
+        print('Obtained list of all players playing today')
 
     def printPlayerList(self):
         for player in self.player_list:
@@ -105,12 +108,11 @@ class PlayerList(object):
     def sortByGoals(self):
         sorted_player_list = self.player_list
         sorted_player_list.sort(key=lambda player: player.goals, reverse=True)
-        for rank in range(len(self.player_list)):
-            player = self.player_list[rank]
-            print('Rank', rank+1,
-                  ' Goals:', player.goals,
-                  ' Name:', player.player_name,
-                  '(' + str(player.player_id) + ')')
+        for rank in range(len(sorted_player_list)):
+            player = sorted_player_list[rank]
+            print('Rank', str(rank+1).zfill(3),
+                  ' Goals:', str(player.goals).zfill(2),
+                  ' Name:', player.player_name)
         return sorted_player_list
 
     def sortByPoints(self):
@@ -118,10 +120,9 @@ class PlayerList(object):
         sorted_player_list.sort(key=lambda player: player.points, reverse=True)
         for rank in range(len(self.player_list)):
             player = self.player_list[rank]
-            print('Rank', rank + 1,
-                  ' Points:', player.points,
-                  ' Name:', player.player_name,
-                  '(' + str(player.player_id) + ')')
+            print('Rank', str(rank+1).zfill(3),
+                  ' Points:', str(player.points).zfill(2),
+                  ' Name:', player.player_name)
         return sorted_player_list
 
     def sortByGoalsPerGame(self):
@@ -132,10 +133,9 @@ class PlayerList(object):
             output_goals_per_game = str(player.goals_per_game)
             if len(output_goals_per_game) == 3: # if the G/P only has tenths place,
                 output_goals_per_game += '0'      # add a trailing 0
-            print('Rank', rank + 1,
+            print('Rank', str(rank+1).zfill(3),
                   ' Goals/Game:', output_goals_per_game,
-                  ' Name:', player.player_name,
-                  '(' + str(player.player_id) + ')')
+                  ' Name:', player.player_name)
         return sorted_player_list
 
 
