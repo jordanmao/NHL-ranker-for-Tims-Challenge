@@ -1,5 +1,6 @@
 import json
 import requests
+from webscraper import *
 
 class Player(object):
     def __init__(self, player_id, player_name):
