@@ -3,9 +3,9 @@ import requests
 from webscraper import *
 
 class Player(object):
-    def __init__(self, player_id, player_name):
+    def __init__(self, player_id):
         self.player_id = player_id
-        self.player_name = player_name
+        self.player_name = ''
         self.goals = 0
         self.points = 0
         self.shots = 0
@@ -14,12 +14,15 @@ class Player(object):
         self.shot_percentage = 0
         self.ice_time_per_game = 0
         self.goals_per_game = 0
-        self.obtainPlayerStats()
+        self.obtainPlayerData()
 
-    def obtainPlayerStats(self):
-        link = 'https://statsapi.web.nhl.com/api/v1/people/' + str(self.player_id) + \
-               '/stats?stats=statsSingleSeason&season=20202021'
-        player_data = requests.get(link).json()
+    def obtainPlayerData(self):
+        link = 'https://statsapi.web.nhl.com/api/v1/people/' + str(self.player_id)
+        player_info = requests.get(link).json()
+        self.player_name = player_info['people'][0]['fullName']
+        # More detailed stats:
+        stats_link = link + '/stats?stats=statsSingleSeason&season=20202021'
+        player_data = requests.get(stats_link).json()
         if player_data['stats'][0]['splits']:
             player_stats = player_data['stats'][0]['splits'][0]['stat']
             self.goals = player_stats['goals']
@@ -43,72 +46,20 @@ class Player(object):
         print('games played:', self.games)
 
 
-class Team(object):
-    def __init__(self, team_id, team_name):
-        self.team_id = team_id
-        self.team_name = team_name
-        self.link = 'https://statsapi.web.nhl.com/api/v1/teams/' + str(team_id)
-        self.roster = []
-        self.obtainRoster()
-
-    def obtainRoster(self):
-        roster_data = requests.get('https://statsapi.web.nhl.com/api/v1/teams/' +
-                                    str(self.team_id) + '?expand=team.roster').json()
-        for player_data in roster_data['teams'][0]['roster']['roster']:
-            if player_data['position']['type'] != 'Goalie':
-                player = Player(player_data['person']['id'],
-                                player_data['person']['fullName'])
-                player_link = 'https://statsapi.web.nhl.com/api/v1/people/' + \
-                              str(player.player_id) + \
-                              '/stats?stats=statsSingleSeason&season=20202021'
-                player_stats = requests.get(player_link).json()
-                if player.goals_per_game > 0.20:
-                    self.roster.append(player)
-        print('Obtained', self.team_name, 'roster')
-
-    def printTeamRoster(self):
-        for player in self.roster:
-            print(player.player_name)
-
-
-class TeamsPlaying(object):
-    def __init__(self):
-        self.teams_list = []
-        self.obtainTeamsPlayingList()
-
-    def obtainTeamsPlayingList(self):
-        schedule_data = requests.get('https://statsapi.web.nhl.com/api/v1/schedule').json()
-        for game in schedule_data['dates'][0]['games']:
-            home_team_data = game['teams']['home']['team']
-            away_team_data = game['teams']['away']['team']
-            home_team = Team(home_team_data['id'], home_team_data['name'])
-            away_team = Team(away_team_data['id'], away_team_data['name'])
-            self.teams_list.append(home_team)
-            self.teams_list.append(away_team)
-        print('Obtained list of teams playing today')
-
-    def printTeamsPlaying(self):
-        for self.team in self.teams_list:
-            print(self.team.team_name)
-
-
 class PlayerList(object):
-    def __init__(self, teams):
+    def __init__(self, selection_list):
         self.player_list = []
-        self.obtainPlayerList(teams)
+        self.obtainPlayerList(selection_list)
 
-    def obtainPlayerList(self, teams):
-        for team in teams.teams_list:
-            self.player_list += team.roster
-        print('Obtained list of all players playing today')
-
-    def printPlayerList(self):
-        for player in self.player_list:
-            print(player.player_id, player.player_name)
+    def obtainPlayerList(self, selection_list):
+        for player_id in selection_list:
+            self.player_list.append(Player(player_id))
 
     def sortByGoals(self):
+        # Sorting
         sorted_player_list = self.player_list
         sorted_player_list.sort(key=lambda player: player.goals, reverse=True)
+        # Printing
         for rank in range(len(sorted_player_list)):
             player = sorted_player_list[rank]
             print('Rank', str(rank+1).zfill(3),
@@ -140,27 +91,42 @@ class PlayerList(object):
         return sorted_player_list
 
 
-
 def writeJSONToFile(json_obj, file_name):
     with open(file_name, 'w') as outfile:
         json.dump(json_obj, outfile, indent=4)
 
 
-teams = TeamsPlaying()
-players = PlayerList(teams)
+selection_lists = obtainPlayerSelectionLists()
+player_lists = [PlayerList(selection_lists[0]),
+                PlayerList(selection_lists[1]),
+                PlayerList(selection_lists[2])]
 
 while True:
-    keyboard_input = input('Sort by [goals] [points] [goalspergame]: ')
+    keyboard_input = input('Sort by goals[1], points[2], or goals/game[3]: ')
     if keyboard_input == 'q':
         print('Quit')
         break
-    ranked = players
-    if keyboard_input == 'goals':
-        ranked = players.sortByGoals()
-        print('\n')
-    elif keyboard_input == 'points':
-        ranked = players.sortByPoints()
-        print('\n')
-    elif keyboard_input == 'goalspergame':
-        ranked = players.sortByGoalsPerGame()
-        print('\n')
+
+    print('\n')
+    if keyboard_input == '1': # Sort by Goals
+        rankings = []
+        for i in range(3):
+            print('PLAYER SELECTION LIST ' + str(i+1) + ':')
+            rankings.append(player_lists[i].sortByGoals())
+            print('\n')
+
+    elif keyboard_input == '2': # Sort by Points
+        rankings = []
+        for i in range(3):
+            print('PLAYER SELECTION LIST ' + str(i+1) + ':')
+            rankings.append(player_lists[i].sortByPoints())
+            print('\n')
+
+    elif keyboard_input == '3': #Sort by Goals/Game
+        rankings = []
+        for i in range(3):
+            print('PLAYER SELECTION LIST ' + str(i+1) + ':')
+            rankings.append(player_lists[i].sortByGoalsPerGame())
+            print('\n')
+    else:
+        print('Invalid Input\n')
