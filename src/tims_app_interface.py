@@ -8,11 +8,11 @@ load_dotenv()
 REFRESH_TOKEN = os.getenv('REFRESH_TOKEN')
 CLIENT_ID = os.getenv('CLIENT_ID')
 
-class TimsAppConnector:
+class TimsAppInterface:
     def __init__(self):
-        self.bearer_token = self.getBearerToken()
+        self.bearer_token = self.get_bearer_token()
 
-    def getBearerToken(self):
+    def get_bearer_token(self):
         url = 'https://cognito-idp.us-east-1.amazonaws.com/'
         payload = json.dumps({
             "ClientId": CLIENT_ID,
@@ -31,9 +31,9 @@ class TimsAppConnector:
             'x-amz-user-agent': 'aws-amplify/0.1.x js'
         }
         response = requests.post(url, headers=headers, data=payload)
-        return response.json().get('AuthenticationResult').get('IdToken')
+        return response.json()['AuthenticationResult']['IdToken']
         
-    def getGamesAndPlayers(self):
+    def get_games_and_players(self):
         url = 'https://px-api.rbi.digital/hockeyprod/picks'
         headers = {
             'authority': 'px-api.rbi.digital',
@@ -53,7 +53,7 @@ class TimsAppConnector:
         response = requests.get(url, headers=headers)
         return response.json()
 
-    def submitPicks(self, player1_id, player2_id, player3_id):
+    def submit_picks(self, player1_id, player2_id, player3_id):
         url = "https://px-api.rbi.digital/hockeyprod/picks"
         payload = json.dumps({
             "picks": [
