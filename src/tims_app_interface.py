@@ -7,6 +7,7 @@ load_dotenv()
 
 REFRESH_TOKEN = os.getenv('REFRESH_TOKEN')
 CLIENT_ID = os.getenv('CLIENT_ID')
+USER_AGENT = os.getenv('USER_AGENT')
 
 class TimsAppInterface:
     def __init__(self):
@@ -40,7 +41,7 @@ class TimsAppInterface:
             'accept': 'application/json, text/plain, */*',
             'x-cognito-id': 'us-east-1:09dc87b6-4be2-475e-ac4c-2e00cbc11bbf',
             'authorization': f'Bearer {self.bearer_token}',
-            'user-agent': 'Mozilla/5.0 (Linux; Android 11; T773O Build/RKQ1.210107.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/99.0.4844.58 Mobile Safari/537.36',
+            'user-agent': USER_AGENT,
             'origin': 'https://timhortons.ca',
             'x-requested-with': 'digital.rbi.timhortons',
             'sec-fetch-site': 'cross-site',
@@ -53,7 +54,8 @@ class TimsAppInterface:
         response = requests.get(url, headers=headers)
         return response.json()
 
-    def submit_picks(self, player1_id, player2_id, player3_id):
+    def submit_picks(self, picks):
+        [player1_id, player2_id, player3_id] = picks
         url = "https://px-api.rbi.digital/hockeyprod/picks"
         payload = json.dumps({
             "picks": [
@@ -76,7 +78,7 @@ class TimsAppInterface:
             'accept': 'application/json, text/plain, */*',
             'x-cognito-id': 'us-east-1:09dc87b6-4be2-475e-ac4c-2e00cbc11bbf',
             'authorization': f'Bearer {self.bearer_token}',
-            'user-agent': 'Mozilla/5.0 (Linux; Android 11; T773O Build/RKQ1.210107.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/99.0.4844.58 Mobile Safari/537.36',
+            'user-agent': USER_AGENT,
             'content-type': 'application/json',
             'origin': 'https://timhortons.ca',
             'x-requested-with': 'digital.rbi.timhortons',

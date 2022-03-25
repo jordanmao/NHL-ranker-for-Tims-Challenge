@@ -15,6 +15,7 @@ class Player(object):
         # NHL team id different from the team id Tim Hortons uses
         self.team_id = None
         self.tims_team_id = tims_player_data['teamId']
+        self.team_abbr = None
         self.goals = 0
         self.points = 0
         self.shots = 0
@@ -24,34 +25,35 @@ class Player(object):
         self.time_on_ice = 0
         self.goals_per_game = 0
 
-        self.set_nhl_team_id(games_today)
+        self.set_nhl_team_info(games_today)
         self.set_nhl_id()
         self.obtain_player_data()
 
-    def set_nhl_team_id(self, games_today):
+    def set_nhl_team_info(self, games_today):
         # In order to get the player's team NHL ID from its Tim Hortons ID, first we must 
-        # obtain the team's abbreviation
+        # obtain the team's name
         for game in games_today:
             home_team = game['teams']['home']
             away_team = game['teams']['away']
             if home_team['id'] == self.tims_team_id:
-                team_abbreviation = home_team['abbr']
+                team_name = home_team['name']
                 break
             elif away_team['id'] == self.tims_team_id:
-                team_abbreviation = away_team['abbr']
+                team_name = away_team['name']
                 break
-
         # Obtain list of all the teams in the NHL so we can get their NHL ID
         url = 'https://statsapi.web.nhl.com/api/v1/teams'
         teams = requests.get(url).json()['teams']
         for team in teams:
-            if team["abbreviation"] == team_abbreviation:
+            if team["teamName"] == team_name:
                 self.team_id = team['id']
+                self.team_abbr = team['abbreviation']
                 return
 
     def set_nhl_id(self):
         url = f'https://statsapi.web.nhl.com/api/v1/teams/{self.team_id}/roster'
-        roster = requests.get(url).json()['roster']
+        response = requests.get(url).json()
+        roster = response['roster']
         for player in roster:
             if player['person']['fullName'] == self.full_name:
                 self.id = player['person']['id']
@@ -75,6 +77,7 @@ class Player(object):
         return {
             'id': self.id,
             'name': self.full_name,
+            'team': self.team_abbr,
             'position': self.position,
             'goals': self.goals,
             'goals/game': self.goals_per_game,
@@ -83,7 +86,8 @@ class Player(object):
             'shot %:': self.shot_percentage,
             '+/-:': self.plus_minus,
             'time on ice:': self.time_on_ice,
-            'games played': self.games
+            'games played': self.games,
+            'tims id': self.tims_player_id
         }
     
     def print(self):
