@@ -1,4 +1,4 @@
-# NHL-ranker-for-Tims-Challenge
+# Tims NHL Hockey Challenge Auto-Picker
 
 The Tim Hortons Hockey Challenge is an app where users are given 3 lists of hockey players everyday, in which they select a player from each list. If a selected player scores that day, the user earns points, which can be redeemed for Tim Hortons goods!
 
