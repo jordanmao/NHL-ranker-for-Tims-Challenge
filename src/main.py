@@ -1,7 +1,8 @@
-from tims_app_interface import TimsAppInterface
+from tims_app_api import TimsAppAPI
 from player import Player
 import requests
 import pandas as pd
+import json
 
 
 def tabulate_player_set(player_set):
@@ -11,14 +12,37 @@ def tabulate_player_set(player_set):
         stats.append(player.json())
     return pd.DataFrame(stats)
     
+
+tims_app_api = TimsAppAPI()
+
+# Obtain and store history of correct/incorrect picks from Tim Hortons app into history.json
+pick_history = tims_app_api.get_pick_history()
+print('Obtained pick history from Tim Hortons\n')
+with open('history.json', 'w') as outfile:
+    json_string = json.dumps(pick_history, indent=4)
+    outfile.write(json_string)
+
 # Obtain game schedule and player sets from Tim Hortons app
-tims_app_interface = TimsAppInterface()
-games_and_player_data = tims_app_interface.get_games_and_players()
+games_and_player_data = tims_app_api.get_games_and_players()
 print('Obtained game schedule and player sets from Tim Hortons\n')
 
 games = games_and_player_data.get('games')
 picks = games_and_player_data.get('picks')
-if picks != []:
+
+# If picks have already been submitted today, store them into picks.json
+if picks != None:
+    with open('picks.json', 'w') as outfile:
+        stored_picks = []
+        for i in range(3):
+            stored_picks.append({
+                'setId': i,
+                'player': {
+                    'id': picks[i]['player']['id'],
+                    'name': picks[i]['player']['firstName'] + ' ' + picks[i]['player']['lastName']
+                }
+            })
+        json_string = json.dumps(stored_picks, indent=4)
+        outfile.write(json_string)
     print('Picks have already been locked in\nExiting...')
     exit()
 
@@ -53,10 +77,22 @@ names_of_picks = [df.iloc[0]['name'] for df in dfs]
 tims_ids_of_picks = [df.iloc[0]['tims id'] for df in dfs]
 
 print('Picks:')
-for i in range(3):
-    print(f"{i}. {names_of_picks[i]}, {tims_ids_of_picks[i]}")
+with open('picks.json', 'w') as outfile:
+    stored_picks = []
+    for i in range(3):
+        stored_picks.append({
+            'setId': i,
+            'player': {
+                'id': tims_ids_of_picks[i],
+                'name': names_of_picks[i]
+            }
+        })
+        print(f"{i}. {names_of_picks[i]}, {tims_ids_of_picks[i]}")
+    json_string = json.dumps(stored_picks, indent=4)
+    outfile.write(json_string)
 
-status_code = tims_app_interface.submit_picks(tims_ids_of_picks)
+# Submit 3 picks
+status_code = tims_app_api.submit_picks(tims_ids_of_picks)
 if status_code == requests.codes.ok:
     print('\nPicks submission was successful')
 else:
