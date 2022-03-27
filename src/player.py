@@ -55,7 +55,7 @@ class Player(object):
         response = requests.get(url).json()
         roster = response['roster']
         for player in roster:
-            if player['person']['fullName'] == self.full_name:
+            if player['jerseyNumber'] == self.number:
                 self.id = player['person']['id']
                 return
 
