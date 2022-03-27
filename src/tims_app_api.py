@@ -9,7 +9,7 @@ REFRESH_TOKEN = os.getenv('REFRESH_TOKEN')
 CLIENT_ID = os.getenv('CLIENT_ID')
 USER_AGENT = os.getenv('USER_AGENT')
 
-class TimsAppInterface:
+class TimsAppAPI:
     def __init__(self):
         self.bearer_token = self.get_bearer_token()
 
@@ -50,6 +50,26 @@ class TimsAppInterface:
             'referer': 'https://timhortons.ca/',
             'accept-language': 'en-CA,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6',
             'if-none-match': 'W/"70c-oHT3ZjjXihnpscGzW7Bm92wKG4w"'
+        }
+        response = requests.get(url, headers=headers)
+        return response.json()
+    
+    def get_pick_history(self):
+        url = "https://px-api.rbi.digital/hockeyprod/picks/history"
+        headers = {
+            'authority': 'px-api.rbi.digital',
+            'accept': 'application/json, text/plain, */*',
+            'x-cognito-id': 'us-east-1:09dc87b6-4be2-475e-ac4c-2e00cbc11bbf',
+            'authorization': f'Bearer {self.bearer_token}',
+            'user-agent': USER_AGENT,
+            'origin': 'https://timhortons.ca',
+            'x-requested-with': 'digital.rbi.timhortons',
+            'sec-fetch-site': 'cross-site',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-dest': 'empty',
+            'referer': 'https://timhortons.ca/',
+            'accept-language': 'en-CA,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6',
+            'if-none-match': 'W/"105c6-5dy/kNv3YXGLEjopauej4m96XwA"'
         }
         response = requests.get(url, headers=headers)
         return response.json()
