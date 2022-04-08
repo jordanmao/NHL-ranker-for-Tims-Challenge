@@ -3,6 +3,8 @@ import json
 
 
 class Player(object):
+    injured_players = []
+
     def __init__(self, tims_player_data, games_today):
         # NHL player id different from the player id Tim Hortons uses
         self.id = None
@@ -24,10 +26,11 @@ class Player(object):
         self.shot_percentage = 0
         self.time_on_ice = 0
         self.goals_per_game = 0
+        self.injured = False
 
         self.set_nhl_team_info(games_today)
         self.set_nhl_id()
-        self.obtain_player_data()
+        self.set_player_data()
 
     def set_nhl_team_info(self, games_today):
         # In order to get the player's team NHL ID from its Tim Hortons ID, first we must 
@@ -59,7 +62,7 @@ class Player(object):
                 self.id = player['person']['id']
                 return
 
-    def obtain_player_data(self):
+    def set_player_data(self):
         url = f'https://statsapi.web.nhl.com/api/v1/people/{self.id}/stats?stats=statsSingleSeason&season=20212022'
         player_data = requests.get(url).json()
         if player_data['stats'][0]['splits']:
@@ -72,6 +75,16 @@ class Player(object):
             self.time_on_ice = '00:' + player_stats['timeOnIcePerGame']
             self.games = player_stats['games']
             self.goals_per_game = round(1.0 * self.goals/self.games, 2)
+
+        for injured_player in Player.injured_players:
+            if injured_player['player'] == self.full_name:
+                self.injured = True
+                break
+
+    @staticmethod
+    def get_injured_players():
+        url = 'https://www.rotowire.com/hockey/tables/injury-report.php?team=ALL&pos=ALL'
+        return requests.get(url).json()
 
     def json(self):
         return {
@@ -92,3 +105,5 @@ class Player(object):
     
     def print(self):
         print(json.dumps(self.json(), indent=4))
+
+Player.injured_players = Player.get_injured_players()

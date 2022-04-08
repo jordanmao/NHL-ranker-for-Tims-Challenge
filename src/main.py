@@ -2,6 +2,7 @@ from tims_app_api import TimsAppAPI
 from player import Player
 import requests
 import pandas as pd
+import numpy as np
 import json
 
 
@@ -9,7 +10,10 @@ def tabulate_player_set(player_set):
     stats = []
     for player_data in player_set:
         player = Player(player_data, games) # also pulls player stats
-        stats.append(player.json())
+        if player.injured:
+            print(player.full_name, player.team_abbr, 'is absent')
+        else:
+            stats.append(player.json())
     return pd.DataFrame(stats)
     
 
@@ -69,6 +73,7 @@ for i in range(3):
         by=['goals', 'goals/game', 'points'], 
         ascending=[False, False, False], 
         inplace=True)
+    df.index = np.arange(1, len(df) + 1)
     print(f'\nPlayer set {set_num}\n', df, '\n\n')
     dfs.append(df)
 
