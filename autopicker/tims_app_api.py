@@ -1,13 +1,20 @@
 import os
-import requests
 import json
+import logging
+import requests
+from requests.exceptions import HTTPError
 from dotenv import load_dotenv
+from utils import log_http_error
 
+
+# Load environment variables
 load_dotenv()
-
 REFRESH_TOKEN = os.getenv('REFRESH_TOKEN')
 CLIENT_ID = os.getenv('CLIENT_ID')
 USER_AGENT = os.getenv('USER_AGENT')
+
+# Initialize a logger for TimsAppAPI
+logger = logging.getLogger(__name__)
 
 class TimsAppAPI:
     def __init__(self):
@@ -31,8 +38,15 @@ class TimsAppAPI:
             'x-amz-target': 'AWSCognitoIdentityProviderService.InitiateAuth',
             'x-amz-user-agent': 'aws-amplify/0.1.x js'
         }
-        response = requests.post(url, headers=headers, data=payload)
-        return response.json()['AuthenticationResult']['IdToken']
+        try:
+            response = requests.post(url, headers=headers, data=payload)
+            response.raise_for_status()
+        except HTTPError as http_err:
+            error_msg = 'HTTP error occured when trying to obtain bearer token'
+            log_http_error(error_msg, logger, response, http_err)
+        else:
+            logger.debug('Obtained bearer token')
+            return response.json()['AuthenticationResult']['IdToken']
         
     def get_games_and_players(self):
         url = 'https://px-api.rbi.digital/hockeyprod/picks'
@@ -51,8 +65,15 @@ class TimsAppAPI:
             'accept-language': 'en-CA,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6',
             'if-none-match': 'W/"70c-oHT3ZjjXihnpscGzW7Bm92wKG4w"'
         }
-        response = requests.get(url, headers=headers)
-        return response.json()
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+        except HTTPError as http_err:
+            error_msg = 'HTTP error occured when trying to get games schedule and players sets from Tim Hortons app'
+            log_http_error(error_msg, logger, response, http_err)
+        else:
+            logger.info('Obtained game schedule and player sets from Tim Hortons app')
+            return response.json()
     
     def get_pick_history(self):
         url = "https://px-api.rbi.digital/hockeyprod/picks/history"
@@ -71,8 +92,15 @@ class TimsAppAPI:
             'accept-language': 'en-CA,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6',
             'if-none-match': 'W/"105c6-5dy/kNv3YXGLEjopauej4m96XwA"'
         }
-        response = requests.get(url, headers=headers)
-        return response.json()
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+        except HTTPError as http_err:
+            error_msg = 'HTTP error occured when trying to get pick history from Tim Hortons app'
+            log_http_error(error_msg, logger, response, http_err)
+        else:
+            logger.info('Obtained pick history from Tim Hortons app')
+            return response.json()
 
     def submit_picks(self, picks):
         [player1_id, player2_id, player3_id] = picks
@@ -108,5 +136,13 @@ class TimsAppAPI:
             'referer': 'https://timhortons.ca/',
             'accept-language': 'en-CA,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6'
         }
-        response = requests.post(url, headers=headers, data=payload)
-        return response.status_code
+        try:
+            response = requests.post(url, headers=headers, data=payload)
+            response.raise_for_status()
+        except HTTPError as http_err:
+            error_msg = 'Failed to submit picks to Tim Hortons app with response'
+            log_http_error(error_msg, logger, response, http_err)
+        else:
+            logger.info('Submitted picks to Tim Hortons app')
+            return response.status_code
+        

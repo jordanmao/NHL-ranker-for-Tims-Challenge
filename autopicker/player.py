@@ -1,6 +1,11 @@
 import requests
+from requests.exceptions import HTTPError
 import json
+import logging
+from utils import log_http_error
 
+# Initialize a logger for Player
+logger = logging.getLogger(__name__)
 
 class Player(object):
     injured_players = []
@@ -35,6 +40,7 @@ class Player(object):
     def set_nhl_team_info(self, games_today):
         # In order to get the player's team NHL ID from its Tim Hortons ID, first we must 
         # obtain the team's name
+        team_name = ''
         for game in games_today:
             home_team = game['teams']['home']
             away_team = game['teams']['away']
@@ -44,6 +50,10 @@ class Player(object):
             elif away_team['id'] == self.tims_team_id:
                 team_name = away_team['name']
                 break
+        if team_name == '':
+            logger.error(f"Failed to find {self.full_name}'s team name")
+            exit()
+
         # Obtain list of all the teams in the NHL so we can get their NHL ID
         url = 'https://statsapi.web.nhl.com/api/v1/teams'
         teams = requests.get(url).json()['teams']
@@ -51,40 +61,69 @@ class Player(object):
             if team["teamName"] == team_name:
                 self.team_id = team['id']
                 self.team_abbr = team['abbreviation']
+                logger.debug(f"Found {self.full_name}'s team info")
                 return
+        logger.error(f"Failed to find {self.full_name}'s team info")
+        exit()
 
     def set_nhl_id(self):
         url = f'https://statsapi.web.nhl.com/api/v1/teams/{self.team_id}/roster'
-        response = requests.get(url).json()
-        roster = response['roster']
-        for player in roster:
-            if player['jerseyNumber'] == self.number:
-                self.id = player['person']['id']
-                return
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+        except HTTPError as http_err:
+            error_msg = f"HTTP error occured when trying to obtain team {self.team_id}'s roster"
+            log_http_error(error_msg, logger, response, http_err)
+        else:
+            roster = response.json()['roster']
+            for player in roster:
+                if player['jerseyNumber'] == self.number:
+                    self.id = player['person']['id']
+                    logger.debug(f"Found {self.full_name}'s NHL id: {self.id}")
+                    return
+            logger.error(f"Failed to find {self.full_name}'s NHL id in {self.team_abbr} ({self.team_id})'s roster data")
+            exit()
 
     def set_player_data(self):
         url = f'https://statsapi.web.nhl.com/api/v1/people/{self.id}/stats?stats=statsSingleSeason&season=20212022'
-        player_data = requests.get(url).json()
-        if player_data['stats'][0]['splits']:
-            player_stats = player_data['stats'][0]['splits'][0]['stat']
-            self.goals = player_stats['goals']
-            self.points = player_stats['points']
-            self.shots = player_stats['shots']
-            self.shot_percentage = player_stats['shotPct']
-            self.plus_minus = player_stats['plusMinus']
-            self.time_on_ice = '00:' + player_stats['timeOnIcePerGame']
-            self.games = player_stats['games']
-            self.goals_per_game = round(1.0 * self.goals/self.games, 2)
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+        except HTTPError as http_err:
+            error_msg = f"HTTP error occurred when trying to trying to obtain {self.full_name} ({self.id})'s stats"
+            log_http_error(error_msg, logger, response, http_err)
+        else:
+            player_data = response.json()
+            if player_data['stats'][0]['splits']:
+                player_stats = player_data['stats'][0]['splits'][0]['stat']
+                self.goals = player_stats['goals']
+                self.points = player_stats['points']
+                self.shots = player_stats['shots']
+                self.shot_percentage = player_stats['shotPct']
+                self.plus_minus = player_stats['plusMinus']
+                self.time_on_ice = '00:' + player_stats['timeOnIcePerGame']
+                self.games = player_stats['games']
+                self.goals_per_game = round(1.0 * self.goals/self.games, 2)
 
-        for injured_player in Player.injured_players:
-            if injured_player['player'] == self.full_name:
-                self.injured = True
-                break
+            for injured_player in Player.injured_players:
+                if injured_player['player'] == self.full_name:
+                    self.injured = True
+                    break
+            
+            logger.debug(f"Obtained {self.full_name} ({self.id})'s stats")
 
     @staticmethod
     def get_injured_players():
         url = 'https://www.rotowire.com/hockey/tables/injury-report.php?team=ALL&pos=ALL'
-        return requests.get(url).json()
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+        except HTTPError as http_err:
+            error_msg = 'HTTP error occured when trying to find list of injured players'
+            log_http_error(error_msg, logger, response, http_err)
+        else:
+            logger.debug('Obtained list of injured players')
+            return response.json()
 
     def json(self):
         return {
