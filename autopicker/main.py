@@ -5,6 +5,7 @@ import json
 import logging
 from utils import *
 from player import Player
+from pathlib import Path
 
 
 def tabulate_player_set(player_set, games):
@@ -17,6 +18,8 @@ def tabulate_player_set(player_set, games):
             stats.append(player.json())
     return pd.DataFrame(stats)
 
+
+project_path = Path(__file__).parent.parent
 # Logging Config --------------------------------------------------------------------
 logger = logging.getLogger()
 # set up logging to file which writes DEGUG messages or higher to the file
@@ -24,7 +27,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s [%(name)-12.12s] [%(levelname)-5.5s] [%(filename)-17.17s:%(lineno)-4d] %(message)s',
     datefmt='%m-%d %H:%M',
-    filename='../logs/autopicker.log',
+    filename=f'{project_path}/logs/autopicker.log',
     filemode='w',
     encoding='utf-8')
 # define a Handler which writes INFO messages or higher to the sys.stderr
@@ -39,21 +42,19 @@ tims_app_api = TimsAppAPI()
 
 # Obtain and store history of correct/incorrect picks from Tim Hortons app into history.json
 pick_history = tims_app_api.get_pick_history()
-# print('Obtained pick history from Tim Hortons\n')
-with open('../logs/history.json', 'w') as outfile:
+with open(f'{project_path}/logs/history.json', 'w') as outfile:
     json_string = json.dumps(pick_history, indent=4)
     outfile.write(json_string)
 
 # Obtain game schedule and player sets from Tim Hortons app
 games_and_player_data = tims_app_api.get_games_and_players()
-# print('Obtained game schedule and player sets from Tim Hortons\n')
 
 games = games_and_player_data.get('games')
 picks = games_and_player_data.get('picks')
 
 # If picks have already been submitted today, store them into picks.json
 if picks != None:
-    with open('../logs/picks.json', 'w') as outfile:
+    with open(f'{project_path}/logs/picks.json', 'w') as outfile:
         stored_picks = []
         for i in range(3):
             stored_picks.append({
@@ -92,14 +93,14 @@ for i in range(3):
         ascending=[False, False, False], 
         inplace=True)
     df.index = np.arange(1, len(df) + 1)
-    logger.info(f'\nPlayer set {set_num}\n', df, '\n\n')
+    logger.info(f'\nPlayer set {set_num}\n{df}\n\n')
     dfs.append(df)
 
 # The top row of each of the 3 sorted dataframes represents the 3 players to pick
 names_of_picks = [df.iloc[0]['name'] for df in dfs]
 tims_ids_of_picks = [df.iloc[0]['tims id'] for df in dfs]
 
-with open('picks.json', 'w') as outfile:
+with open(f'{project_path}/logs/picks.json', 'w') as outfile:
     stored_picks = []
     for i in range(3):
         stored_picks.append({
@@ -109,11 +110,11 @@ with open('picks.json', 'w') as outfile:
                 'name': names_of_picks[i]
             }
         })
-        logger.info(f"Pick {i}. {names_of_picks[i]}, {tims_ids_of_picks[i]}")
+        logger.info(f"Pick {i+1}. {names_of_picks[i]}, {tims_ids_of_picks[i]}")
     json_string = json.dumps(stored_picks, indent=4)
     outfile.write(json_string)
 
 # Submit 3 picks
-# tims_app_api.submit_picks(tims_ids_of_picks)
-# print('\n')
-# logger.info('Picks submission was successful')
+tims_app_api.submit_picks(tims_ids_of_picks)
+print('\n')
+logger.info('Picks submission was successful')
