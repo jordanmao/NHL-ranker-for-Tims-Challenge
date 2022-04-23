@@ -94,7 +94,9 @@ for i in range(3):
         ascending=[False, False, False])
     sorted_df.index = np.arange(1, len(sorted_df) + 1)
     logger.info(f'\nPlayer set {set_num}\n{sorted_df}\n\n')
-    dfs.append(sorted_df)
+    dfs.append(sorted_df)  
+    # Export dataframe rankings to excel file
+    sorted_df.to_excel(f'{project_path}/logs/rankings_set{set_num}.xlsx', sheet_name='rankings')
 
 # The top row of each of the 3 sorted dataframes represents the 3 players to pick
 names_of_picks = [df.iloc[0]['name'] for df in dfs]
