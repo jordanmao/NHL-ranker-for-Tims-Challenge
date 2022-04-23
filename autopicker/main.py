@@ -15,11 +15,12 @@ def tabulate_player_set(player_set, games):
         if player.injured:
             print(player.full_name, player.team_abbr, 'is absent')
         else:
-            stats.append(player.json())
+            stats.append(player.to_dict())
     return pd.DataFrame(stats)
 
 
 project_path = Path(__file__).parent.parent
+
 # Logging Config --------------------------------------------------------------------
 logger = logging.getLogger()
 # set up logging to file which writes DEGUG messages or higher to the file
@@ -87,14 +88,13 @@ for i in range(3):
     set_num = i + 1
     print(f'Tabulating player set {set_num}...')
     df = tabulate_player_set(player_sets[i], games)
-    # Sort the dataframes by goals, goals/game, then points (all in descending order)
-    df.sort_values(
-        by=['goals', 'goals/game', 'points'], 
-        ascending=[False, False, False], 
-        inplace=True)
-    df.index = np.arange(1, len(df) + 1)
-    logger.info(f'\nPlayer set {set_num}\n{df}\n\n')
-    dfs.append(df)
+    # Sort the dataframes by goals, recent goals, then goals/game (all in descending order)
+    sorted_df = df.sort_values(
+        by=['goals', 'recent goals', 'goals/game'], 
+        ascending=[False, False, False])
+    sorted_df.index = np.arange(1, len(sorted_df) + 1)
+    logger.info(f'\nPlayer set {set_num}\n{sorted_df}\n\n')
+    dfs.append(sorted_df)
 
 # The top row of each of the 3 sorted dataframes represents the 3 players to pick
 names_of_picks = [df.iloc[0]['name'] for df in dfs]
