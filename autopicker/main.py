@@ -6,6 +6,7 @@ import logging
 from utils import *
 from player import Player
 from pathlib import Path
+import os
 
 
 def tabulate_player_set(player_set, games):
@@ -24,6 +25,8 @@ project_path = Path(__file__).parent.parent
 # Logging Config --------------------------------------------------------------------
 logger = logging.getLogger()
 # set up logging to file which writes DEGUG messages or higher to the file
+if not os.path.exists(f'{project_path}/logs'):
+    os.makedirs(f'{project_path}/logs')
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s [%(name)-12.12s] [%(levelname)-5.5s] [%(filename)-17.17s:%(lineno)-4d] %(message)s',
