@@ -52,7 +52,9 @@ with open(f'{project_path}/logs/history.json', 'w') as outfile:
 
 # Obtain game schedule and player sets from Tim Hortons app
 games_and_player_data = tims_app_api.get_games_and_players()
-
+if games_and_player_data.get('code') and games_and_player_data.get('code') == 'noContest':
+    logger.info('Exiting...')
+    exit()
 games = games_and_player_data.get('games')
 picks = games_and_player_data.get('picks')
 

@@ -102,6 +102,9 @@ class TimsAppAPI:
             response = requests.get(url, headers=headers)
             response.raise_for_status()
         except HTTPError as http_err:
+            if response.json().get("code") and response.json()['code'] == 'noContest':
+                logger.info('No contest available at the moment')
+                return response.json()
             error_msg = 'HTTP error occurred when trying to get games schedule and players sets from Tim Hortons app'
             log_http_error(error_msg, logger, response, http_err)
         else:
