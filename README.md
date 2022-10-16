@@ -22,6 +22,7 @@ The Tim Hortons app does not have a public API. Therefore, you will need to remo
     CLIENT_ID=___
     REFRESH_TOKEN=___
     ```
+6. Enter the Tims Hockey Challenge and complete the setup if you haven't already done so (may include a simple math question and contest display name prompt).
 ### Install dependencies
 1. Install [Python3](https://www.python.org/downloads/).
 2. Install the required dependencies: `pip install -r requirements.txt`.
