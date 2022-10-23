@@ -4,7 +4,7 @@ import logging
 import requests
 from requests.exceptions import HTTPError
 from dotenv import load_dotenv
-from utils import log_http_error
+from logging_utils import log_http_error
 
 
 # Load environment variables
