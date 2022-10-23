@@ -9,28 +9,29 @@ from utils import log_http_error
 
 # Load environment variables
 load_dotenv()
-REFRESH_TOKEN = os.getenv('REFRESH_TOKEN')
 CLIENT_ID = os.getenv('CLIENT_ID')
 USER_AGENT = os.getenv('USER_AGENT')
+REFRESH_TOKEN = os.getenv('REFRESH_TOKEN')
+USER_ID = os.getenv('USER_ID')
 
 # Initialize a logger for TimsAppAPI
 logger = logging.getLogger(__name__)
 
 class TimsAppAPI:
     def __init__(self):
-        bearer_token = self.__get_bearer_token()
-        self.access_token = bearer_token['AccessToken']
-        self.id_token = bearer_token['IdToken']
-        self.username = self.__get_username()
+        bearer_token = self._get_bearer_token()
+        self._access_token = bearer_token['AccessToken']
+        self._id_token = bearer_token['IdToken']
+        self._email = self._get_email()
 
-    def __get_bearer_token(self):
+    def _get_bearer_token(self):
         url = 'https://cognito-idp.us-east-1.amazonaws.com/'
         payload = json.dumps({
-            "ClientId": CLIENT_ID,
-            "AuthFlow": "REFRESH_TOKEN_AUTH",
-            "AuthParameters": {
-                "REFRESH_TOKEN": REFRESH_TOKEN,
-                "DEVICE_KEY": None
+            'ClientId': CLIENT_ID,
+            'AuthFlow': 'REFRESH_TOKEN_AUTH',
+            'AuthParameters': {
+                'REFRESH_TOKEN': REFRESH_TOKEN,
+                'DEVICE_KEY': None
             }
         })
         headers = {
@@ -48,13 +49,15 @@ class TimsAppAPI:
             error_msg = 'HTTP error occurred when trying to obtain bearer token'
             log_http_error(error_msg, logger, response, http_err)
         else:
-            logger.debug('Obtained bearer token')
-            return response.json()['AuthenticationResult']
+            bearer_token = response.json()['AuthenticationResult']
+            logger.debug('Bearer token: ' + json.dumps(bearer_token))
+            return bearer_token
     
-    def __get_username(self):
-        url = "https://cognito-idp.us-east-1.amazonaws.com/"
-
-        payload = json.dumps({"AccessToken": self.access_token})
+    def _get_email(self):
+        url = 'https://cognito-idp.us-east-1.amazonaws.com/'
+        payload = json.dumps({
+            'AccessToken': self._access_token
+        })
         headers = {
             'authority': 'cognito-idp.us-east-1.amazonaws.com',
             'accept': '*/*',
@@ -75,19 +78,20 @@ class TimsAppAPI:
             response = requests.post(url, headers=headers, data=payload)
             response.raise_for_status()
         except HTTPError as http_err:
-            error_msg = 'HTTP error occurred when trying to obtain username'
+            error_msg = 'HTTP error occurred when trying to obtain email'
             log_http_error(error_msg, logger, response, http_err)
         else:
-            logger.debug('Obtained username')
-            return response.json()['Username']
+            email = response.json()['UserAttributes'][1]['Value']
+            logger.debug('Email: ' + email)
+            return email
 
     def get_games_and_players(self):
         url = 'https://px-api.rbi.digital/hockeyprod/picks'
         headers = {
             'authority': 'px-api.rbi.digital',
             'accept': 'application/json, text/plain, */*',
-            'x-cognito-id': f'us-east-1:{self.username}',
-            'authorization': f'Bearer {self.id_token}',
+            'x-cognito-id': USER_ID,
+            'authorization': f'Bearer {self._id_token}',
             'user-agent': USER_AGENT,
             'origin': 'https://timhortons.ca',
             'x-requested-with': 'digital.rbi.timhortons',
@@ -102,7 +106,7 @@ class TimsAppAPI:
             response = requests.get(url, headers=headers)
             response.raise_for_status()
         except HTTPError as http_err:
-            if response.json().get("code") and response.json()['code'] == 'noContest':
+            if response.json().get('code') and response.json()['code'] == 'noContest':
                 logger.info('No contest available at the moment')
                 return response.json()
             error_msg = 'HTTP error occurred when trying to get games schedule and players sets from Tim Hortons app'
@@ -110,14 +114,14 @@ class TimsAppAPI:
         else:
             logger.info('Obtained game schedule and player sets from Tim Hortons app')
             return response.json()
-    
+
     def get_pick_history(self):
-        url = "https://px-api.rbi.digital/hockeyprod/picks/history"
+        url = 'https://px-api.rbi.digital/hockeyprod/picks/history'
         headers = {
             'authority': 'px-api.rbi.digital',
             'accept': 'application/json, text/plain, */*',
-            'x-cognito-id': f'us-east-1:{self.username}',
-            'authorization': f'Bearer {self.id_token}',
+            'x-cognito-id': USER_ID,
+            'authorization': f'Bearer {self._id_token}',
             'user-agent': USER_AGENT,
             'origin': 'https://timhortons.ca',
             'x-requested-with': 'digital.rbi.timhortons',
@@ -140,28 +144,28 @@ class TimsAppAPI:
 
     def submit_picks(self, picks):
         [player1_id, player2_id, player3_id] = picks
-        url = "https://px-api.rbi.digital/hockeyprod/picks"
+        url = 'https://px-api.rbi.digital/hockeyprod/picks'
         payload = json.dumps({
-            "picks": [
+            'picks': [
                 {
-                    "setId": "1",
-                    "playerId": player1_id
+                    'setId': '1',
+                    'playerId': player1_id
                 },
                 {
-                    "setId": "2",
-                    "playerId": player2_id
+                    'setId': '2',
+                    'playerId': player2_id
                 },
                 {
-                    "setId": "3",
-                    "playerId": player3_id
+                    'setId': '3',
+                    'playerId': player3_id
                 }
             ]
         })
         headers = {
             'authority': 'px-api.rbi.digital',
             'accept': 'application/json, text/plain, */*',
-            'x-cognito-id': f'us-east-1:{self.username}',
-            'authorization': f'Bearer {self.id_token}',
+            'x-cognito-id': USER_ID,
+            'authorization': f'Bearer {self._id_token}',
             'user-agent': USER_AGENT,
             'content-type': 'application/json',
             'origin': 'https://timhortons.ca',

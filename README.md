@@ -12,15 +12,20 @@ The Tim Hortons app does not have a public API. Therefore, you will need to remo
 1. Setup remote debugging by following these [instructions](https://developer.chrome.com/docs/devtools/remote-debugging/).
 2. Once your phone is connected, open the Tim Hortons app on your phone and inspect the respective tab on your computer, which should open a DevTools window. Install the Tim Hortons app if you haven't already.
 3. Sign out of the app if you aren't already.
-4. Watch the log in the *Network* tab in the DevTools window as you sign into the app. Look for the resource named `cognito-idp.us-east-1.amazonaws.com` and record the following values:
+4. Watch the list of network activity names in the *Network* tab in the DevTools window as you sign into the app. 
+   ![My Image](images/network_activity_1.png)
+   Filter for *"cognito"* and open the first `cognito-idp.us-east-1.amazonaws.com` activity and record the following values:
     - `user-agent` (found in the *Headers* tab)
     - `ClientId` (found in the *Payload* tab)
     - `RefreshToken` (found in the *Preview* or *Response* tab)
+    
+    Then look filter for *"sync"* and open the activity named `sync`. Click the *Payload* tab and record the value for the key `user_id`.
 5. Create a `.env` file in the root directory of this repo and insert the values you found like so:
     ```
     USER_AGENT=___
     CLIENT_ID=___
     REFRESH_TOKEN=___
+    USER_ID=___
     ```
 6. Enter the Tims Hockey Challenge and complete the setup if you haven't already done so (may include a simple math question and contest display name prompt).
 ### Install dependencies
