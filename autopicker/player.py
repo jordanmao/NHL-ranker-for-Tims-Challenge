@@ -91,7 +91,7 @@ class Player(object):
             exit()
 
     def get_player_stats(self):
-        url = f'https://statsapi.web.nhl.com/api/v1/people/{self.id}/stats?stats=statsSingleSeason&season=20212022'
+        url = f'https://statsapi.web.nhl.com/api/v1/people/{self.id}/stats?stats=statsSingleSeason&season=20222023'
         try:
             response = requests.get(url)
             response.raise_for_status()
