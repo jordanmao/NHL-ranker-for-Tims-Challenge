@@ -5,7 +5,10 @@ import logging
 from logging_utils import log_http_error
 from datetime import datetime, timedelta
 from collections import Counter
+from pathlib import Path
 
+
+project_path = Path(__file__).parent.parent
 
 # Initialize a logger for Player
 logger = logging.getLogger(__name__)
@@ -22,7 +25,7 @@ class Player(object):
         self.first_name = tims_player_data['firstName']
         self.last_name = tims_player_data['lastName']
         self.full_name = self.first_name + ' ' + self.last_name
-        self.number = tims_player_data['number']
+        self.number = self._get_player_number(tims_player_data)
         self.position = tims_player_data['position']
         # NHL team id different from the team id Tim Hortons uses
         self.team_id = None
@@ -42,6 +45,15 @@ class Player(object):
         self.get_nhl_team_info(games_today)
         self.get_nhl_id()
         self.get_player_stats()
+
+    def _get_player_number(self, tims_player_data):
+        # Check if player is listed in data/player_number_fixes.json file
+        with open(f'{project_path}/autopicker/data/player_number_fixes.json') as f:
+            player_number_fixes = json.load(f)
+            for player in player_number_fixes:
+                if player['timsId'] == self.tims_player_id:
+                    return player['number']
+        return int(tims_player_data['number'])
 
     def get_nhl_team_info(self, games_today):
         # In order to get the player's team NHL ID from its Tim Hortons ID, first we must 
@@ -83,7 +95,7 @@ class Player(object):
         else:
             roster = response.json()['roster']
             for player in roster:
-                if player['jerseyNumber'] == self.number:
+                if int(player['jerseyNumber']) == self.number:
                     self.id = player['person']['id']
                     logger.debug(f"Found {self.full_name}'s NHL id: {self.id}")
                     return

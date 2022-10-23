@@ -51,8 +51,8 @@ picks = games_and_player_data.get('picks')
 
 # If picks have already been submitted today, store them into picks.json
 if picks != None:
-    selected_player_names = [p['player']['id'] for p in picks]
-    selected_player_ids = [f"{p['player']['firstName']} {p['player']['lastName']}" for p in picks]
+    selected_player_names = [f"{p['player']['firstName']} {p['player']['lastName']}" for p in picks]
+    selected_player_ids = [p['player']['id'] for p in picks]
     path = f'{project_path}/logs/picks.json'
     store_picks(selected_player_names, selected_player_ids, path)
     logger.info('Picks have already been locked in\nExiting...')
