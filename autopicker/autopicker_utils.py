@@ -8,7 +8,6 @@ def tabulate_player_set(player_set, games, logger):
     stats = []
     for player_data in player_set:
         try:
-            print(player_data)
             player = Player(player_data, games) # also pulls player stats
         except Exception as e:
             logger.error('Failed to initialize player data for ' + player_data['firstName'] + " " + player_data['lastName'])

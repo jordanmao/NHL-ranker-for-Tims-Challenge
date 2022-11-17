@@ -78,7 +78,7 @@ dfs = []
 for i in range(3):
     set_num = i + 1
     print(f'Tabulating player set {set_num}...')
-    df = tabulate_player_set(player_sets[i], games)
+    df = tabulate_player_set(player_sets[i], games, logger)
     # Sort the dataframes by goals, recent goals, then goals/game (all in descending order)
     sorted_df = df.sort_values(
         by=['goals', 'recent goals', 'goals/game'], 
