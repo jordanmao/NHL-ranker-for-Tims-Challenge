@@ -69,8 +69,9 @@ class Player(object):
                 team_name = away_team['name']
                 break
         if team_name == '':
-            logger.error(f"Failed to find {self.full_name}'s team name")
-            exit()
+            fail_message(f"Failed to find {self.full_name}'s team name")
+            logger.error(fail_message)
+            raise Exception(fail_message)
 
         # Obtain list of all the teams in the NHL so we can get their NHL ID
         url = 'https://statsapi.web.nhl.com/api/v1/teams'
@@ -81,8 +82,9 @@ class Player(object):
                 self.team_abbr = team['abbreviation']
                 logger.debug(f"Found {self.full_name}'s team info")
                 return
-        logger.error(f"Failed to find {self.full_name}'s team info")
-        exit()
+        fail_message = f"Failed to find {self.full_name}'s team info"
+        logger.error(fail_message)
+        raise Exception(fail_message)
 
     def get_nhl_id(self):
         url = f'https://statsapi.web.nhl.com/api/v1/teams/{self.team_id}/roster'
@@ -99,8 +101,9 @@ class Player(object):
                     self.id = player['person']['id']
                     logger.debug(f"Found {self.full_name}'s NHL id: {self.id}")
                     return
-            logger.error(f"Failed to find {self.full_name}'s NHL id in {self.team_abbr} ({self.team_id})'s roster data")
-            exit()
+            fail_message = f"Failed to find {self.full_name}'s NHL id in {self.team_abbr} ({self.team_id})'s roster data"
+            logger.error(fail_message)
+            raise Exception(fail_message)
 
     def get_player_stats(self):
         url = f'https://statsapi.web.nhl.com/api/v1/people/{self.id}/stats?stats=statsSingleSeason&season=20222023'

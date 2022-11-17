@@ -4,10 +4,15 @@ import pandas as pd
 import json
 
 
-def tabulate_player_set(player_set, games):
+def tabulate_player_set(player_set, games, logger):
     stats = []
     for player_data in player_set:
-        player = Player(player_data, games) # also pulls player stats
+        try:
+            print(player_data)
+            player = Player(player_data, games) # also pulls player stats
+        except Exception as e:
+            logger.error('Failed to initialize player data for ' + player_data['firstName'] + " " + player_data['lastName'])
+            continue
         if player.injured:
             print(player.full_name, player.team_abbr, 'is absent')
         else:
