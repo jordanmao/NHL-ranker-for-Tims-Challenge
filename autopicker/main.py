@@ -48,14 +48,9 @@ if games_and_player_data.get('code') and games_and_player_data.get('code') == 'n
     logger.info('Exiting...')
     exit()
 
-# Check if there are any players available for selection
-if games_and_player_data['sets'][0]['players'] == []:
-    logger.info('No players left available for selection')
-    logger.info('Exiting...')
-    exit()
-
 games = games_and_player_data.get('games')
 picks = games_and_player_data.get('picks')
+sets = games_and_player_data.get('sets')
 
 # If picks have already been submitted today, store them into picks.json
 if picks != None:
@@ -64,6 +59,12 @@ if picks != None:
     path = f'{project_path}/logs/picks.json'
     store_picks(selected_player_names, selected_player_ids, path)
     logger.info('Picks have already been locked in\nExiting...')
+    exit()
+
+# Check if there are any players available for selection
+if sets[0]['players'] == []:
+    logger.info('No players left available for selection')
+    logger.info('Exiting...')
     exit()
 
 # PLAYER AUTO-SELECTION -------------------------------------------------------------
