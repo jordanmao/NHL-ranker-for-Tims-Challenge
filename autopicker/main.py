@@ -85,7 +85,7 @@ for i in range(3):
         by=['goals', 'recent goals', 'goals/game'], 
         ascending=[False, False, False])
     sorted_df.index = np.arange(1, len(sorted_df) + 1)
-    logger.info(f'\nPlayer set {set_num}\n{sorted_df}\n\n')
+    logger.info(f'\nPlayer set {set_num}\n{sorted_df.to_string()}\n\n')
     dfs.append(sorted_df)  
     # Export dataframe rankings to excel file
     sorted_df.to_excel(f'{project_path}/logs/rankings_set{set_num}.xlsx', sheet_name='rankings')
