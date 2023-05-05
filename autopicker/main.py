@@ -1,6 +1,6 @@
 from tims_app_api import TimsAppAPI
 from pathlib import Path
-from autopicker_utils import tabulate_player_set, store_picks
+from utils import tabulate_player_set, store_picks
 import pandas as pd
 import numpy as np
 import json
