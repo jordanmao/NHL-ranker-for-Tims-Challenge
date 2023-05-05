@@ -14,7 +14,7 @@ The Tim Hortons app does not have a public API. Therefore, you will need to remo
 2. Once your phone is connected, open the Tim Hortons app on your phone and inspect the respective tab on your computer, which should open a DevTools window. Install the Tim Hortons app if you haven't already.
 3. Sign out of the app if you aren't already.
 4. Watch the list of network activity names in the *Network* tab in the DevTools window as you sign into the app. 
-   ![My Image](images/network_activity_1.png)
+   ![My Image](assets/network_activity_1.png)
    Filter for *"cognito"* and open the first `cognito-idp.us-east-1.amazonaws.com` activity and record the following values:
     - `user-agent` (found in the *Headers* tab)
     - `ClientId` (found in the *Payload* tab)
