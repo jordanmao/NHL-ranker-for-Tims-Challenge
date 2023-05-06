@@ -1,12 +1,15 @@
 import os
+import sys
 import json
 import logging
 import requests
 from requests.exceptions import HTTPError
 from dotenv import load_dotenv
-from logging_utils import log_http_error
+from utils.logger_utils import log_http_error
 
 
+# Initialize a logger for TimsAppAPI
+logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 CLIENT_ID = os.getenv('CLIENT_ID')
@@ -14,11 +17,20 @@ USER_AGENT = os.getenv('USER_AGENT')
 REFRESH_TOKEN = os.getenv('REFRESH_TOKEN')
 USER_ID = os.getenv('USER_ID')
 
-# Initialize a logger for TimsAppAPI
-logger = logging.getLogger(__name__)
-
 class TimsAppAPI:
     def __init__(self):
+        if CLIENT_ID == None:
+            logger.error('CLIENT_ID not found')
+            sys.exit()
+        if USER_AGENT == None:
+            logger.error('USER_AGENT not found')
+            sys.exit()
+        if REFRESH_TOKEN == None:
+            logger.error('REFRESH_TOKEN not found')
+            sys.exit()
+        if USER_ID == None:
+            logger.error('USER_ID not found')
+            sys.exit()
         bearer_token = self._get_bearer_token()
         self._access_token = bearer_token['AccessToken']
         self._id_token = bearer_token['IdToken']

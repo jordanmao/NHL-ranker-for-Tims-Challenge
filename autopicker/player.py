@@ -2,7 +2,7 @@ import requests
 from requests.exceptions import HTTPError
 import json
 import logging
-from logging_utils import log_http_error
+from utils.logger_utils import log_http_error
 from datetime import datetime, timedelta
 from collections import Counter
 from pathlib import Path
