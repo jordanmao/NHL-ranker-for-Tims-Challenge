@@ -152,21 +152,25 @@ class Player(object):
         start_date = (datetime.today() - timedelta(days=Player.time_range)).strftime('%Y-%m-%d')
         end_date = datetime.today().strftime('%Y-%m-%d')
         url = f'https://nhl-score-api.herokuapp.com/api/scores?startDate={start_date}&endDate={end_date}'
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-        except HTTPError as http_error:
-            error_msg = f'HTTP error occured when trying to get recent goal scorers from the past {Player.time_range} days'
-            log_http_error(error_msg, logger, response, http_error)
-        else:
-            goal_scorers = []
-            for date in response.json():
-                for game in date['games']:
-                    if game['status']['state'] == 'FINAL':
-                        for goal in game['goals']:
-                            goal_scorers.append(goal['scorer']['player'])
-            logger.debug('Obtained list of recent goal scorers')
-            return Counter(goal_scorers)
+        for tries in range(1, 4):
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+            except HTTPError as http_error:
+                if tries == 3:
+                    error_msg = f'HTTP error occured when trying to get recent goal scorers from the past {Player.time_range} days'
+                    log_http_error(error_msg, logger, response, http_error)
+            else:
+                break
+        
+        goal_scorers = []
+        for date in response.json():
+            for game in date['games']:
+                if game['status']['state'] == 'FINAL':
+                    for goal in game['goals']:
+                        goal_scorers.append(goal['scorer']['player'])
+        logger.debug('Obtained list of recent goal scorers')
+        return Counter(goal_scorers)
 
     def to_dict(self):
         return {
