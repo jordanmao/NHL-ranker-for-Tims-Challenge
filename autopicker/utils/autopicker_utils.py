@@ -1,4 +1,4 @@
-from player import Player
+from autopicker.player import Player
 import pandas as pd
 import json
 

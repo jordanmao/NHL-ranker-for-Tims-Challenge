@@ -1,9 +1,11 @@
-FROM python:3.9
+FROM public.ecr.aws/lambda/python:3.9
 
-WORKDIR /app
-COPY autopicker/ autopicker/
+# dependencies
 COPY requirements.txt .
+RUN pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
 
-RUN pip install --no-cache-dir -r requirements.txt
+# source code
+COPY autopicker/ "${LAMBDA_TASK_ROOT}/autopicker/"
+COPY aws_lambda_handler/app.py "${LAMBDA_TASK_ROOT}"
 
-CMD ["python", "./autopicker/main.py"]
+CMD [ "app.lambda_handler" ]

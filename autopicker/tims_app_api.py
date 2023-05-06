@@ -4,12 +4,14 @@ import json
 import logging
 import requests
 from requests.exceptions import HTTPError
-from utils.logger_utils import log_http_error
+from autopicker.utils.logger_utils import log_http_error
+from dotenv import load_dotenv
 
 
 # Initialize a logger for TimsAppAPI
 logger = logging.getLogger(__name__)
 # Load environment variables
+load_dotenv()
 CLIENT_ID = os.getenv('CLIENT_ID')
 USER_AGENT = os.getenv('USER_AGENT')
 REFRESH_TOKEN = os.getenv('REFRESH_TOKEN')
