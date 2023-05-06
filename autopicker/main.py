@@ -22,9 +22,14 @@ def main():
     # LOGGING CONFIG --------------------------------------------------------------------
 
     logger = logging.getLogger()
+    
     # set up logging to file which writes DEGUG messages or higher to the file
     if not os.path.exists(log_path):
         os.makedirs(log_path)
+
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
+
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s [%(name)-12.12s] [%(levelname)-5.5s] [%(filename)-17.17s:%(lineno)-4d] %(message)s',
@@ -32,9 +37,11 @@ def main():
         filename=f'{log_path}/autopicker.log',
         filemode='w',
         encoding='utf-8')
+
     # define a Handler which writes INFO messages or higher to the sys.stderr
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
+
     # set a format which is simpler for console use
     formatter = logging.Formatter('%(message)s')
     console.setFormatter(formatter)
@@ -63,11 +70,13 @@ def main():
 
     # If picks have already been submitted today, store them into picks.json
     if picks != None:
+        logger.info('Picks have already been locked in:')
         selected_player_names = [f"{p['player']['firstName']} {p['player']['lastName']}" for p in picks]
         selected_player_ids = [p['player']['id'] for p in picks]
-        path = f'{log_path}/picks.json'
-        store_picks(selected_player_names, selected_player_ids, path)
-        logger.info('Picks have already been locked in\nExiting...')
+        store_picks(selected_player_names, selected_player_ids, f'{log_path}/picks.json')
+        for i in range(3):
+            logger.info(f"Pick {i+1}. {selected_player_names[i]}, {selected_player_ids[i]}")
+        logger.info('Exiting...')
         return
 
     # Check if there are any players available for selection

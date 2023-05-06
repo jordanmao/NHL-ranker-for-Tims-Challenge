@@ -96,7 +96,7 @@ class TimsAppAPI:
             log_http_error(error_msg, logger, response, http_err)
         else:
             email = response.json()['UserAttributes'][1]['Value']
-            logger.debug('Email: ' + email)
+            logger.info('Email: ' + email)
             return email
 
     def get_games_and_players(self):
