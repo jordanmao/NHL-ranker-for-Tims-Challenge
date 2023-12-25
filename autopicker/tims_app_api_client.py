@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from utils.logger_utils import log_http_error
 
 
-# Initialize a logger for TimsAppAPI
+# Initialize a logger for TimsAppApiClient
 logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
@@ -17,7 +17,7 @@ USER_AGENT = os.getenv('USER_AGENT')
 REFRESH_TOKEN = os.getenv('REFRESH_TOKEN')
 USER_ID = os.getenv('USER_ID')
 
-class TimsAppAPI:
+class TimsAppApiClient:
     
     if CLIENT_ID == None:
         logger.error('CLIENT_ID not found')

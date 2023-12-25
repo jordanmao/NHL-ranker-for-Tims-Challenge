@@ -1,4 +1,5 @@
-from tims_app_api import TimsAppAPI
+from tims_app_api_client import TimsAppApiClient
+from nhl_api_client import NHLApiClient
 from pathlib import Path
 from utils.autopicker_utils import *
 import pandas as pd
@@ -33,7 +34,7 @@ logger.addHandler(console)
 
 # GET CONTEST DATA ------------------------------------------------------------------
 
-tims_app_api = TimsAppAPI()
+tims_app_api = TimsAppApiClient()
 
 # Obtain and store history of correct/incorrect picks from Tim Hortons app into history.json
 pick_history = tims_app_api.get_pick_history()
@@ -68,6 +69,15 @@ if sets[0]['players'] == []:
     exit()
 
 # PLAYER AUTO-SELECTION -------------------------------------------------------------
+nhl_api_client = NHLApiClient()
+
+tims_team_id_to_abbr_map = map_tims_team_id_to_nhl_team_abbr(nhl_api_client, games)
+team_abbr_to_roster_map = map_team_abbr_to_roster(nhl_api_client, tims_team_id_to_abbr_map.values())
+
+# Load player jersey number fixes
+jersey_number_fixes_file = open(f'{project_path}/autopicker/data/jersey_number_fixes.json')
+jersey_number_fixes = json.load(jersey_number_fixes_file)
+jersey_number_fixes_file.close()
 
 # Extract the 3 player sets to pick a player from each
 player_sets = [games_and_player_data.get('sets')[i]['players'] for i in range(3)]
@@ -79,7 +89,8 @@ dfs = []
 for i in range(3):
     set_num = i + 1
     print(f'Tabulating player set {set_num}...')
-    df = tabulate_player_set(player_sets[i], games, logger)
+    df = tabulate_player_set(nhl_api_client, player_sets[i], tims_team_id_to_abbr_map, 
+                             team_abbr_to_roster_map, jersey_number_fixes)
     # Sort the dataframes by goals, recent goals, then goals/game (all in descending order)
     sorted_df = df.sort_values(
         by=['goals', 'recent goals', 'goals/game'], 
