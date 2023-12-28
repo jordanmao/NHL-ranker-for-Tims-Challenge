@@ -71,13 +71,16 @@ if sets[0]['players'] == []:
 # PLAYER AUTO-SELECTION -------------------------------------------------------------
 nhl_api_client = NHLApiClient()
 
-tims_team_id_to_abbr_map = map_tims_team_id_to_nhl_team_abbr(nhl_api_client, games)
-team_abbr_to_roster_map = map_team_abbr_to_roster(nhl_api_client, tims_team_id_to_abbr_map.values())
+# Load team name mapping fixes (mainly to account for accents, e.g. Montréal Canadiens)
+team_name_fixes_file_name = f'{project_path}/autopicker/data/team_name_fixes.json'
+team_name_fixes = json.load(open(team_name_fixes_file_name, 'r', encoding='utf-8'))
 
 # Load player jersey number fixes
-jersey_number_fixes_file = open(f'{project_path}/autopicker/data/jersey_number_fixes.json')
-jersey_number_fixes = json.load(jersey_number_fixes_file)
-jersey_number_fixes_file.close()
+jersey_number_fixes_file_name = f'{project_path}/autopicker/data/jersey_number_fixes.json'
+jersey_number_fixes = json.load(open(jersey_number_fixes_file_name, 'r', encoding='utf-8'))
+
+tims_team_id_to_abbr_map = map_tims_team_id_to_nhl_team_abbr(nhl_api_client, games, team_name_fixes)
+team_abbr_to_roster_map = map_team_abbr_to_roster(nhl_api_client, tims_team_id_to_abbr_map.values())
 
 # Extract the 3 player sets to pick a player from each
 player_sets = [games_and_player_data.get('sets')[i]['players'] for i in range(3)]

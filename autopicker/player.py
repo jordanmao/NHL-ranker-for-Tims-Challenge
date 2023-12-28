@@ -41,9 +41,9 @@ class Player:
             'goals/game': self.goals_per_game,
             'points': self.points,
             'shots': self.shots,
-            'shot %:': self.shot_percentage,
-            '+/-:': self.plus_minus,
-            'time on ice:': str(self.time_on_ice),
+            'shot %': self.shot_percentage,
+            '+/-': self.plus_minus,
+            'time on ice': str(self.time_on_ice),
             'games played': self.games_played,
             'tims id': self.tims_player_id,
             'injured': self.injured

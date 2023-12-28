@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from collections import Counter
 from pathlib import Path
 from player import Player
-from typing import List, Dict, Any
+from typing import List, Dict, Set, Any
 
 project_path = Path(__file__).parent.parent
 
@@ -17,7 +17,7 @@ SEASON='20232024'
 
 class NHLApiClient:
     def __init__(self):
-        self.injured_player_names: List[int] = self._get_injured_player_names()
+        self.injured_player_names: Set[str] = self._get_injured_player_names()
         # self.recent_goal_scorers: Counter = self._get_recent_goal_scorers()
         time_range: int = 5
     
@@ -32,7 +32,7 @@ class NHLApiClient:
 
     def get_team_roster(self, team_abbr: str) -> Dict[str, Any]:
         try:
-            response = requests.get(f'https://api-web.nhle.com/v1/roster/{self.team_abbr}/{SEASON}')
+            response = requests.get(f'https://api-web.nhle.com/v1/roster/{team_abbr}/{SEASON}')
             response.raise_for_status()
             return response.json()
         except HTTPError as http_err:
@@ -57,9 +57,9 @@ class NHLApiClient:
             player.shots = curr_season_totals['shots']
             player.shot_percentage = curr_season_totals['shootingPctg']
             player.plus_minus = curr_season_totals['plusMinus']
-            m, s = curr_season_totals['toi'].split(':')
-            player.time_on_ice = timedelta(minutes=m, seconds=s)
-            player.games_played = curr_season_totals['games']
+            m, s = curr_season_totals['avgToi'].split(':')
+            player.time_on_ice = timedelta(minutes=int(m), seconds=int(s))
+            player.games_played = curr_season_totals['gamesPlayed']
             player.goals_per_game = round(1.0 * player.goals/player.games_played, 2)
             player.injured = player.full_name in self.injured_player_names
             
@@ -68,7 +68,7 @@ class NHLApiClient:
             error_msg = f"HTTP error occurred when trying to trying to obtain {player.full_name} ({player.id})'s stats"
             log_http_error(error_msg, logger, response, http_err)
             
-    def _get_injured_player_names():
+    def _get_injured_player_names(self) -> Set[str]:
         try:
             response = requests.get('https://www.rotowire.com/hockey/tables/injury-report.php?team=ALL&pos=ALL')
             response.raise_for_status()
@@ -78,7 +78,7 @@ class NHLApiClient:
             error_msg = 'HTTP error occured when trying to find list of injured players'
             log_http_error(error_msg, logger, response, http_err)
 
-    def _get_recent_goal_scorers():
+    def _get_recent_goal_scorers(self):
         start_date = (datetime.today() - timedelta(days=Player.time_range)).strftime('%Y-%m-%d')
         end_date = datetime.today().strftime('%Y-%m-%d')
         url = f'https://nhl-score-api.herokuapp.com/api/scores?startDate={start_date}&endDate={end_date}'

@@ -7,20 +7,21 @@ import json
 
 logger = logging.getLogger(__name__)
 
-def map_tims_team_id_to_nhl_team_abbr(nhl_api_client: NHLApiClient, games: List[Dict[str, Any]]) -> Dict[int, str]:
+def map_tims_team_id_to_nhl_team_abbr(nhl_api_client: NHLApiClient, games: List[Dict[str, Any]], 
+                                      team_name_fixes: Dict[str, str]) -> Dict[int, str]:
     all_nhl_teams = nhl_api_client.get_teams()
     team_name_to_abbr_map = {team['fullName'] : team['triCode'] for team in all_nhl_teams}
     tims_team_id_to_abbr_map = {}
     for game in games:
-        home_team = game['teams']['home']
-        away_team = game['teams']['away']
-        if home_team['name'] not in team_name_to_abbr_map:
-            logger.exception(f"Unknown NHL team with name: {home_team['name']}")
-        if away_team['name'] not in team_name_to_abbr_map:
-            logger.exception(f"Unknown NHL team with name: {away_team['name']}")
-        
-        tims_team_id_to_abbr_map[home_team['id']] = team_name_to_abbr_map[home_team['name']]
-        tims_team_id_to_abbr_map[away_team['id']] = team_name_to_abbr_map[away_team['name']]
+        for team in [game['teams']['home'], game['teams']['away']]:
+            team_name = team['city'] + ' ' + team['name']
+            if team_name in team_name_fixes:
+                team_name = team_name_fixes[team_name]
+            
+            if team_name not in team_name_to_abbr_map:
+                logger.exception(f"Unknown NHL team with name: {team_name}")
+            
+            tims_team_id_to_abbr_map[team['id']] = team_name_to_abbr_map[team_name]
     
     return tims_team_id_to_abbr_map
 
@@ -58,6 +59,7 @@ def tabulate_player_set(nhl_api_client: NHLApiClient, tims_player_set: List[Dict
                     position=tims_player_data['position'],
                     team_abbr=team_abbr
                 )
+                logger.debug(f'Initialized player class for {player.full_name}')
                 nhl_api_client.populate_player_stats(player)
                 if player.injured:
                     print(player.full_name, player.team_abbr, 'is absent')
