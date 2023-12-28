@@ -72,6 +72,7 @@ def main() -> None:
 
     # If picks have already been submitted today, store them into picks.json
     if picks != None:
+        logger.info('Picks have already been locked in:')
         selected_player_names = [f"{p['player']['firstName']} {p['player']['lastName']}" for p in picks]
         selected_player_ids = [p['player']['id'] for p in picks]
         store_picks(selected_player_names, selected_player_ids, f'{log_path}/picks.json')
