@@ -41,7 +41,7 @@ def get_updated_jersey_number(tims_player_data: str, jersey_number_fixes: Dict[s
 
 def tabulate_player_set(nhl_api_client: NHLApiClient, tims_player_set: List[Dict[str, Any]], 
                         tims_team_id_to_abbr_map: Dict[int, str], team_abbr_to_roster_map: Dict[str, Any],
-                        jersey_number_fixes: Dict[str, Dict[str, Any]]):
+                        jersey_number_fixes: Dict[str, Dict[str, Any]]) -> pd.DataFrame:
     stats = []
     for tims_player_data in tims_player_set:
         jersey_number = get_updated_jersey_number(tims_player_data, jersey_number_fixes)
@@ -71,7 +71,7 @@ def tabulate_player_set(nhl_api_client: NHLApiClient, tims_player_set: List[Dict
                 continue
     return pd.DataFrame(stats)
 
-def store_picks(player_names, player_ids, path):
+def store_picks(player_names: List[str], player_ids: List[int], path: str) -> None:
     with open(path, 'w') as outfile:
         stored_picks = []
         for i in range(3):

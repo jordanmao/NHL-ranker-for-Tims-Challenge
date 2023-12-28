@@ -67,6 +67,9 @@ class NHLApiClient:
         except HTTPError as http_err:
             error_msg = f"HTTP error occurred when trying to trying to obtain {player.full_name} ({player.id})'s stats"
             log_http_error(error_msg, logger, response, http_err)
+        except Exception as e:
+            logger.error(f'An unexpected error occurred: {e}')
+            exit()
             
     def _get_injured_player_names(self) -> Set[str]:
         try:
