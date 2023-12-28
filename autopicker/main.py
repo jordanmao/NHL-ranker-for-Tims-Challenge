@@ -1,28 +1,19 @@
-from autopicker.tims_app_api import TimsAppAPI
-from autopicker.utils.autopicker_utils import *
+from tims_app_api_client import TimsAppApiClient
+from nhl_api_client import NHLApiClient
 from pathlib import Path
+from utils.autopicker_utils import *
+from dotenv import load_dotenv
 import pandas as pd
 import numpy as np
 import json
 import logging
 import os
-from dotenv import load_dotenv
 
 
-def main():
-    load_dotenv()
-    LOG_PATH = os.getenv('LOG_PATH')
 
-    project_path = Path(__file__).parent.parent
-    if (LOG_PATH == None):
-        log_path = f'{project_path}/logs'
-    else:
-        log_path = LOG_PATH
-
-    # LOGGING CONFIG --------------------------------------------------------------------
-
+def setupLogger(log_path: str) -> logging.Logger:
     logger = logging.getLogger()
-    
+
     # set up logging to file which writes DEGUG messages or higher to the file
     if not os.path.exists(log_path):
         os.makedirs(log_path)
@@ -47,9 +38,20 @@ def main():
     console.setFormatter(formatter)
     logger.addHandler(console)
 
-    # GET CONTEST DATA ------------------------------------------------------------------
+    return logger
 
-    tims_app_api = TimsAppAPI()
+
+def main() -> None:
+    load_dotenv()
+    LOG_PATH = os.getenv('LOG_PATH')
+
+    project_path = Path(__file__).parent.parent
+
+    log_path = LOG_PATH if LOG_PATH is not None else f'{project_path}/logs'
+    logger = setupLogger(log_path)
+
+    # GET CONTEST DATA -----------------------------------------------------------------------------
+    tims_app_api = TimsAppApiClient()
 
     # Obtain and store history of correct/incorrect picks from Tim Hortons app into history.json
     pick_history = tims_app_api.get_pick_history()
@@ -85,7 +87,19 @@ def main():
         logger.info('Exiting...')
         return
 
-    # PLAYER AUTO-SELECTION -------------------------------------------------------------
+    # PLAYER AUTO-SELECTION ------------------------------------------------------------------------
+    nhl_api_client = NHLApiClient()
+
+    # Load team name mapping fixes (mainly to account for accents, e.g. Montréal Canadiens)
+    team_name_fixes_file_name = f'{project_path}/autopicker/data/team_name_fixes.json'
+    team_name_fixes = json.load(open(team_name_fixes_file_name, 'r', encoding='utf-8'))
+
+    # Load player jersey number fixes
+    jersey_number_fixes_file_name = f'{project_path}/autopicker/data/jersey_number_fixes.json'
+    jersey_number_fixes = json.load(open(jersey_number_fixes_file_name, 'r', encoding='utf-8'))
+
+    tims_team_id_to_abbr_map = map_tims_team_id_to_nhl_team_abbr(nhl_api_client, games, team_name_fixes)
+    team_abbr_to_roster_map = map_team_abbr_to_roster(nhl_api_client, tims_team_id_to_abbr_map.values())
 
     # Extract the 3 player sets to pick a player from each
     player_sets = [games_and_player_data.get('sets')[i]['players'] for i in range(3)]
@@ -97,14 +111,18 @@ def main():
     for i in range(3):
         set_num = i + 1
         print(f'Tabulating player set {set_num}...')
-        df = tabulate_player_set(player_sets[i], games, logger)
+        df = tabulate_player_set(nhl_api_client, player_sets[i], tims_team_id_to_abbr_map, 
+                                team_abbr_to_roster_map, jersey_number_fixes)
+
         # Sort the dataframes by goals, recent goals, then goals/game (all in descending order)
         sorted_df = df.sort_values(
             by=['goals', 'recent goals', 'goals/game'], 
             ascending=[False, False, False])
+        
         sorted_df.index = np.arange(1, len(sorted_df) + 1)
         logger.info(f'\nPlayer set {set_num}\n{sorted_df.to_string()}\n\n')
-        dfs.append(sorted_df)  
+        dfs.append(sorted_df)
+
         # Export dataframe rankings to excel file
         sorted_df.to_excel(f'{log_path}/rankings_set{set_num}.xlsx', sheet_name='rankings')
 
