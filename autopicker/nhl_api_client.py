@@ -2,11 +2,11 @@ import requests
 from requests.exceptions import HTTPError
 import json
 import logging
-from utils.logger_utils import log_http_error
+from autopicker.utils.logger_utils import log_http_error
+from autopicker.player import Player
 from datetime import datetime, timedelta
 from collections import Counter
 from pathlib import Path
-from player import Player
 from typing import List, Dict, Set, Any
 
 project_path = Path(__file__).parent.parent

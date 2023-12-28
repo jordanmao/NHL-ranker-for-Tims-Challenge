@@ -1,5 +1,5 @@
-from nhl_api_client import NHLApiClient
-from player import Player
+from autopicker.nhl_api_client import NHLApiClient
+from autopicker.player import Player
 from typing import List, Dict, Any
 import logging
 import pandas as pd
