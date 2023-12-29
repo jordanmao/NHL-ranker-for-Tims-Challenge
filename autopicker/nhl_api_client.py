@@ -44,8 +44,17 @@ class NHLApiClient:
             response = requests.get(f'https://api-web.nhle.com/v1/player/{player.id}/landing')
             response.raise_for_status()
             player_data = response.json()
-            curr_season_totals = player_data['seasonTotals'][-1]
-            if curr_season_totals['season'] != int(SEASON):
+
+            # Look for season totals for the current seasons in the NHL league
+            curr_season_totals = None
+            for season_total in reversed(player_data['seasonTotals']): # start looking from back (most recent)
+                if season_total['season'] != int(SEASON):
+                    break
+                if season_total['leagueAbbrev'] == 'NHL':
+                    curr_season_totals = season_total
+                    break
+
+            if curr_season_totals is None:
                 logger.error(f'Unable to pull current {SEASON} season totals for {player.full_name} ({player.id})')
                 return
             
@@ -68,7 +77,7 @@ class NHLApiClient:
             error_msg = f"HTTP error occurred when trying to trying to obtain {player.full_name} ({player.id})'s stats"
             log_http_error(error_msg, logger, response, http_err)
         except Exception as e:
-            logger.error(f'An unexpected error occurred: {e}')
+            logger.error(f"An unexpected error occurred when populating {player.full_name} ({player.id})'s stats: {e}")
             exit()
             
     def _get_injured_player_names(self) -> Set[str]:

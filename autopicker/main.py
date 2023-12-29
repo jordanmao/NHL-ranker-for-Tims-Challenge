@@ -8,6 +8,7 @@ import numpy as np
 import json
 import logging
 import os
+import argparse
 
 
 
@@ -44,7 +45,10 @@ def setupLogger(log_path: str) -> logging.Logger:
 def main() -> None:
     load_dotenv()
     LOG_PATH = os.getenv('LOG_PATH')
-    TEST = os.getenv('TEST')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--test', help='True or False if calculated picks should be submitted', default=False)
+    args = parser.parse_args()
+    TEST = args.test
 
     project_path = Path(__file__).parent.parent
 
@@ -135,7 +139,7 @@ def main() -> None:
     for i in range(3):
         logger.info(f"Pick {i+1}. {selected_player_names[i]}, {selected_player_ids[i]}")
 
-    if TEST is not True:
+    if TEST is False:
         # Submit 3 picks
         tims_app_api.submit_picks(selected_player_ids)
         print('\n')

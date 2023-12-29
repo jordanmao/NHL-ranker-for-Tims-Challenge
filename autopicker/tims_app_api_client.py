@@ -30,7 +30,7 @@ if REFRESH_TOKEN == None:
 if USER_ID == None:
     logger.error('USER_ID not found')
     sys.exit()
-elif USER_ID.startswith('us-east-1:'):
+elif not USER_ID.startswith('us-east-1:'):
     USER_ID = 'us-east-1:' + USER_ID
 
 
