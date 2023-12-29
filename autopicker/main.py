@@ -135,7 +135,7 @@ def main() -> None:
     for i in range(3):
         logger.info(f"Pick {i+1}. {selected_player_names[i]}, {selected_player_ids[i]}")
 
-    if TEST is not None:
+    if TEST is not True:
         # Submit 3 picks
         tims_app_api.submit_picks(selected_player_ids)
         print('\n')

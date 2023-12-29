@@ -20,7 +20,7 @@ The Tim Hortons app does not have a public API. Therefore, you will need to remo
     - `ClientId` (found in the *Payload* tab)
     - `RefreshToken` (found in the *Preview* or *Response* tab)
     
-    Then look filter for *"sync"* and open the activity named `sync`. Click the *Payload* tab and record the value for the key `user_id`.
+    Then use the search function (ctrl+f) to search for `thLegacyCognitoId` and record the value as `USER_ID`.
 5. Create a `.env` file in the root directory of this repo and insert the values you found like so:
     ```
     USER_AGENT=___
