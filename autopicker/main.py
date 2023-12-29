@@ -44,6 +44,7 @@ def setupLogger(log_path: str) -> logging.Logger:
 def main() -> None:
     load_dotenv()
     LOG_PATH = os.getenv('LOG_PATH')
+    TEST = os.getenv('TEST')
 
     project_path = Path(__file__).parent.parent
 
@@ -134,10 +135,11 @@ def main() -> None:
     for i in range(3):
         logger.info(f"Pick {i+1}. {selected_player_names[i]}, {selected_player_ids[i]}")
 
-    # Submit 3 picks
-    tims_app_api.submit_picks(selected_player_ids)
-    print('\n')
-    logger.info('Picks submission was successful')
+    if TEST is not None:
+        # Submit 3 picks
+        tims_app_api.submit_picks(selected_player_ids)
+        print('\n')
+        logger.info('Picks submission was successful')
 
 
 if __name__ == "__main__":
