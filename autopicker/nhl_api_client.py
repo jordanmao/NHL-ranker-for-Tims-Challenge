@@ -13,7 +13,7 @@ project_path = Path(__file__).parent.parent
 
 logger = logging.getLogger(__name__)
 
-SEASON='20232024'
+SEASON='20242025'
 
 class NHLApiClient:
     def __init__(self):
